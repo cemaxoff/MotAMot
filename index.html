@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Échelle de mots</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--tx:#1d1d1f;--mut:#6b6b70;--ac:#e0562b;--ok:#2e9e5b;--bd:#ddd8cc;--tile:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1a18;--card:#262522;--tx:#f1efe9;--mut:#a09d94;--ac:#ff7a4d;--ok:#4cc27f;--bd:#3b3935;--tile:#2f2d2a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1b1a18;--card:#262522;--tx:#f1efe9;--mut:#a09d94;--ac:#ff7a4d;--ok:#4cc27f;--bd:#3b3935;--tile:#2f2d2a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:480px;margin:0 auto;padding:14px}
+h1{font-size:22px;margin:4px 0 10px;text-align:center}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-bottom:10px}
+.row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center}
+button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;cursor:pointer}
+button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.goal{display:flex;justify-content:space-around;text-align:center;font-weight:700;font-size:20px;letter-spacing:2px}
+.goal small{display:block;font-size:12px;font-weight:400;color:var(--mut);letter-spacing:0}
+.stats{display:flex;justify-content:space-around;text-align:center;font-size:14px;color:var(--mut)}
+.stats b{display:block;font-size:24px;color:var(--tx)}
+.tiles{display:flex;gap:8px;justify-content:center;margin:6px 0}
+.tile{width:52px;height:62px;font-size:30px;font-weight:700;padding:0;border:2px solid var(--bd);background:var(--tile)}
+.tile.sel{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 30%,transparent)}
+.tile.same{color:var(--ok)}
+.msg{min-height:22px;text-align:center;font-size:14px;color:var(--ac)}
+.kb{display:flex;flex-direction:column;gap:6px;align-items:center}
+.kb div{display:flex;gap:4px}
+.kb button{padding:10px 0;width:31px;font-weight:600;font-size:15px}
+.hist{font-size:14px;color:var(--mut);text-align:center;word-spacing:4px}
+.win{text-align:center;font-size:18px;font-weight:700;color:var(--ok)}
+label{font-size:14px;color:var(--mut)}
+</style>
+</head>
+<body>
+<main>
+<h1>🪜 Échelle de mots</h1>
+<div class="card">
+  <div class="row" id="levels"></div>
+  <div class="row" style="margin-top:8px"><label><input type="checkbox" id="two"> Mode 2 joueurs (chacun son tour)</label></div>
+</div>
+<div class="card">
+  <div class="goal"><div><small>Départ</small><span id="s"></span></div><div>→</div><div><small>Arrivée</small><span id="t"></span></div></div>
+</div>
+<div class="card">
+  <div class="stats"><div><b id="mv">0</b>changements</div><div><b id="mn">0</b>minimum</div><div><b id="bs">–</b>record</div></div>
+  <div class="msg" id="turn" style="color:var(--mut);margin-top:6px"></div>
+  <div class="tiles" id="tiles"></div>
+  <div class="msg" id="msg"></div>
+  <div class="hist" id="hist"></div>
+</div>
+<div class="kb" id="kb"></div>
+<div class="row" style="margin-top:10px">
+  <button id="hint">💡 Indice</button><button id="undo">↩︎ Annuler</button><button id="new">🔄 Nouvelle partie</button>
+</div>
+</main>
+<script>
+/*DATA*/
+const A4=`AIDE AILE AIME AINE AIRE ANSE ARME ARTS BAIN BAIE BALE BANC BAND BASE BATS BEAU BETE BIEN BIER BLEU BLOC BOIS BOLS BOND BONS BORD BOUE BOUT BRAS BRIN BRUN BUSE BUTS CAFE CAGE CALE CAME CAMP CANE CAPE CARE CARS CART CAVE CELA CENT CERF CHAT CHEF CHER CHEZ CHIC CHOC CHOU CHUT CIEL CITE CLEF CLIC CLIN CLOS CLOU CODE COIN COLA COLS COMA CONE COPE CORD CORE COTE COUP COUR COUT CRAN CRIC CRIE CRIN CROC CRUE CUBE CUIR CURE DAIM DAME DANS DATE DEUX DIRE DISC DOIT DOME DONC DONS DORE DOUX DRAP DUEL DUNE DURE ECHO FACE FAIM FAIT FARD FETE FEUX FIER FILE FILM FILS FINE FINS FIRE FLAN FLOT FOIE FOIN FOIS FOND FORT FOUR FUIR FUSE GAIN GALA GANT GARE GAZE GENS GITE GOLF GOUT GRAS GRIS GROS HAIE HALE HAUT HIER HUIT IDEE JADE JEUX JOIE JOLI JOUE JOUR JURE JUPE LACS LAID LAIN LAIT LAME LAVE LENT LIEN LIEU LIME LINE LIRE LIVE LOGE LOIN LONG LOUP LOUE LUNE LUIT LURE MAIL MAIN MAIS MALE MARE MARS MART MATE MELE MENT MERE MERS MIEL MIEN MILE MINE MINI MIRE MISE MODE MOIS MOLE MONT MORE MORT MOTE MOTO MOTS MOUE MUER MULE MURE MURS MUSE MUET NAGE NAIN NAPE NEUF NIER NOIR NOIX NOMS NORD NOTE NOUE NULS ONDE ONZE OPUS ORAL OURS PAGE PAIN PAIR PALE PARC PART PAYS PEAU PERE PEUR PIED PIRE PIPE PLAN PLAT PLIE PLUS POIL POIS PONT PORC PORT POSE POUR PRES PRIX PUCE PUIS PURE RACE RAGE RAIE RAID RAIL RAME RANG RAPE RARE RATE RAYE REEL REIN RIEN RIRE ROBE ROLE ROND ROSE ROUE RUDE RUER RUES SAGE SAIN SALE SANG SAUF SAUT SCIE SEAU SEUL SOIF SOIN SOIR SOLE SOLS SONS SORT SOUS SUCE SUER SUIS SUIT TACT TAIE TAIS TALE TAPE TARD TAUX TELS TENT TETE TIEN TIGE TIRE TOIT TOLE TONS TORD TORE TOUR TOUS TOUT TRAC TRES TRIO TROP TUBE TUER TYPE URNE USER VASE VEAU VERS VERT VETO VIDE VIES VILE VINS VIOL VISA VITE VIVE VOIE VOIR VOIX VOLE VOUS VRAI VUES YEUX ZERO ZONE`.split(/\s+/);
+const N5=`BALLE BELLE BILLE BULLE BOULE MOULE POULE FOULE COUPE SOUPE LOUPE ROUTE RONDE MONDE CORDE CARTE BARRE BARBE BARDE BANDE CASSE CAUSE PAUSE PLUME PLUIE PLAIE PLAGE PLACE PRISE PRIME CRIME CRISE TRACE TRAME TRAIT TRAIN BRAIN GRAIN SALLE SELLE HALLE MALLE PELLE PILLE VILLE TABLE SABLE FABLE CABLE LIVRE TITRE TIGRE VOILE TOILE LAINE POIRE`.split(/\s+/);
+const X5=`COULE ROUGE BOUGE FONDE MONTE MORTE FORTE PORTE BASSE CARRE BRAVE GRAVE GRAND BRUME BRUTE BRUNE FAIRE PAIRE MAIRE MOINE POINT JOINT POING LIBRE TELLE`.split(/\s+/);
+const X6=`MAISON RAISON SAISON POISON PRISON`.split(/\s+/);
+const B4=`ACNE ACTE AMIE AMIS ANGE ARCS ARIA AVEC AVIS AXES BAGS BALS BARS BEBE BILE BOAS BOLE BORE BOTE BOUC CAIS CAPS CAPO CHAR CIME CIRE CLAN CLIP CLUB COCO COTS CRAC CRUS DAIS DENT DIVA DOGE DOTE DOUE DRAG DUOS ECUS EMUS EPEE EPIS ETAL ETRE ETUI EXIL FADE FARE FAUX FIEF FIXE FLUX FONT FOUE FRAI FRET FRIT FUTE GAGE GAIE GAGS GEAI GELS GENE GLUE GNOU GOAL GOBE GRUE HARD HUER HUES IDEM ILOT IRIS JARS JETS JUGE JUTE KILO KIWI LACE LAIE LAIS LEGS LEUR LEVE LIES LIEE LION LOBE LOIR LOTS LUES LUXE MAGE MALS MARC MATH MEME MENE MENU MIDI MIME MOME NAIF NIDS NIEE NOUS NUEE NUIT OBUS OEIL ORGE OSER OTER OUIE PACS PAIE PAON PAPA PARE PATE PAVE PELE PENT PEUT PIAF PICS PILE PINS PION PIEU PLIS POLE POLO PORE POTS POUF PRIE PROF PUBS PUER PUIT PULL PUMA QUAI QUEL RATS REVE RHUM RIME RITE RIVE ROIS ROTE SACS SAGA SAKE SANS SECS SEPT SERF SILO SIRE SITE SKIS SNOB SOIE SOJA SOLO STOP TAIL TAXE TEST THON TICS TIER TOGE TOME TONE TORS TRAM TRIP TROC TRUC TURC UNIE VAIN VELO VENT VEUF VIRE VISE VOTE ZEBU ZELE ZEST ZINC ZOOM`.split(/\s+/);
+const M5=`LOUVE SOUTE ANNEE ARCHE ARENE AIGLE ALLEE ALGUE ARMEE BAGUE BALAI BARGE BARON BATON BIERE BOITE BOMBE BORNE BOURG BRISE BRUIT CADRE CANAL CANNE CARPE CASTE CEDRE CERNE CHAIR CHAMP CHANT CHENE CHIEN CHOSE CHUTE CIBLE CIDRE CLONE COBRA COEUR COLLE COLON COMTE CONTE COPIE COUDE CRABE CRAIE CRANE CREME CRETE CYCLE DAGUE DANSE DATTE DEBIT DEPOT DETTE DEUIL DIGUE DOIGT DONNE DOUTE DRAME DROIT ECHEC ECOLE ECRAN ELITE ENVIE EPAVE EPICE EPOUX ESSAI ETAGE ETANG ETAPE ETUDE FAUNE FERME FIBRE FICHE FILLE FLORE FLUTE FOLIE FORET FORME FOSSE FOYER FRERE FRUIT GAINE GALET GAMME GARDE GENIE GENRE GESTE GLACE GLOBE GOMME GRACE GREVE GUEPE GUIDE HAINE HERBE HEURE HIVER HOTEL HUILE IDOLE IMAGE INDEX JAMBE JOUET LAMPE LANCE LAPIN LARME LATTE LEVRE LIEUE LIGNE LILAS LISTE LUTTE LYCEE MAGIE MARDI MARGE MASSE MATCH MELON MERLE METAL METRE MORUE MOTIF MULET MUSEE NAVET NEIGE NICHE NUAGE OCEAN OFFRE OMBRE OPERA ORAGE ORDRE OUTIL OZONE PALME PARTI PATTE PERLE PERTE PESTE PIECE PIEGE PILOT PISTE PIZZA PLANT PLOMB POCHE POEME POMME POSTE POUCE PRUNE RAMPE RANGE RAVIN REGLE REINE RESTE RIVAL ROBOT ROCHE ROMAN ROSEE RUBAN RUCHE RUINE SABRE SALON SAUCE SAULE SAVON SCENE SERRE SIGNE SINGE SIROP SOEUR SOLDE SONDE SORTE SPORT STADE STYLE SUCRE SUITE SUJET TACHE TALON TANTE TARTE TASSE TEXTE THEME TRIBU TRONC TUILE UNION USAGE USINE VAGUE VALSE VALET VENUE VERRE VESTE VIDEO VIGNE VILLA VITRE VOLET`.split(/\s+/);
+const Y5=`AMPLE BLOND CHAUD CRUEL LARGE LOURD MINCE NOBLE NOIRE NOTRE PETIT PLEIN SOURD JEUNE FRAIS CHERE ALLER AIMER JOUER TIRER PRIER CRIER VIRUS LOTUS COURS CORPS POIDS CHOIX CROIX TEMPS PUITS BIJOU BOEUF VOEUX`.split(/\s+/);
+const Y6=`BATEAU CHAISE CHEVAL COUSIN DANSER ANIMAL BANANE BANQUE BARQUE BASSIN BOUCHE BOUGIE BRIQUE BUREAU CADEAU CAMION CANARD CARTON CASQUE CHAINE CHARME CHASSE CHEMIN CINEMA CITRON CLASSE COLERE COMBAT CORDON CRAYON DANGER DEMAIN DESSIN DOUCHE DRAGON ECOUTE ENFANT ENNEMI ESPACE ETOILE FERMER FIGURE GARAGE GARCON GATEAU JARDIN LETTRE MANGER MARCHE MARQUE MASQUE METIER MIROIR MOTEUR MOULIN NATURE OISEAU ORANGE PALAIS PANIER PARLER PAROLE PATRON PAYSAN PIERRE PLANTE POULET PRINCE PROFIL PUBLIC RACINE RAPIDE REGARD RENARD RETOUR SAUTER SOLEIL TEMPLE TOMATE VALISE VOYAGE`.split(/\s+/);
+const P5=[...N5,...M5];
+const WORDS={4:[...new Set([...A4,...B4])],5:[...new Set([...P5,...X5,...Y5])],6:[...new Set([...P5.map(w=>w+'S'),...X6,...Y6])]};
+const SETS={};for(const k in WORDS)SETS[k]=new Set(WORDS[k]);
+const ADJ={};
+function adj(len){
+  if(ADJ[len])return ADJ[len];
+  const w=WORDS[len],g={};
+  w.forEach(x=>g[x]=[]);
+  for(let i=0;i<w.length;i++)for(let j=i+1;j<w.length;j++){
+    let d=0;for(let k=0;k<len&&d<2;k++)if(w[i][k]!==w[j][k])d++;
+    if(d===1){g[w[i]].push(w[j]);g[w[j]].push(w[i])}
+  }
+  return ADJ[len]=g;
+}
+function bfs(s,len){
+  const g=adj(len),dist={[s]:0},par={};const q=[s];
+  while(q.length){const u=q.shift();for(const v of g[u])if(!(v in dist)){dist[v]=dist[u]+1;par[v]=u;q.push(v)}}
+  return{dist,par};
+}
+const CFG={1:[4,3,4],2:[4,5,9],3:[5,4,8],4:[6,4,9]};
+const NAMES={1:'Facile',2:'Moyen',3:'Difficile',4:'Expert (6 lettres)'};
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
+function makePair(lv){
+  const[len,mn,mx]=CFG[lv];
+  const ws=[...WORDS[len]].sort(()=>Math.random()-.5);
+  let best=null;
+  for(const s of ws){
+    const{dist}=bfs(s,len),c=Object.keys(dist).filter(t=>dist[t]>=mn&&dist[t]<=mx);
+    if(c.length){const t=pick(c);return{len,s,t,min:dist[t]}}
+    for(const t in dist)if(!best||dist[t]>best.min)best={len,s,t,min:dist[t]};
+  }
+  return best;
+}
+/*END*/
+const $=id=>document.getElementById(id);
+const ROWS=['AZERTYUIOP','QSDFGHJKLM','WXCVBN'];
+let lv=1,G=null,sel=0,player=0,two=false,hints=0;
+function best(){try{return localStorage.getItem('echelle-'+lv)}catch(e){return null}}
+function saveBest(n){try{const b=best();if(!b||n<+b)localStorage.setItem('echelle-'+lv,n)}catch(e){}}
+function start(){
+  G=makePair(lv);G.cur=G.s;G.hist=[G.s];G.moves=0;G.over=false;sel=0;player=0;hints=0;
+  $('msg').textContent='Touche une case, puis une lettre.';render();
+}
+function render(){
+  $('levels').innerHTML=[1,2,3,4].map(i=>`<button class="${i===lv?'on':''}" data-l="${i}">${NAMES[i]}</button>`).join('');
+  $('s').textContent=G.s;$('t').textContent=G.t;$('mv').textContent=G.moves;$('mn').textContent=G.min;
+  $('bs').textContent=best()||'–';
+  $('tiles').innerHTML=[...G.cur].map((c,i)=>`<button class="tile ${i===sel&&!G.over?'sel':''} ${c===G.t[i]?'same':''}" data-i="${i}">${c}</button>`).join('');
+  $('hist').textContent=G.hist.join(' → ');
+  $('turn').textContent=G.over?'':(two?`Au tour du joueur ${player+1}`:'');
+}
+function say(m){$('msg').textContent=m}
+function play(ch){
+  if(G.over)return;
+  if(ch===G.cur[sel])return say('C’est déjà cette lettre : change-la !');
+  const nw=G.cur.slice(0,sel)+ch+G.cur.slice(sel+1);
+  if(!SETS[G.len].has(nw))return say(`« ${nw} » n’est pas dans mon dictionnaire.`);
+  if(G.hist.includes(nw))return say(`« ${nw} » a déjà été utilisé.`);
+  G.cur=nw;G.hist.push(nw);G.moves++;player=1-player;say('');
+  if(nw===G.t){
+    G.over=true;saveBest(G.moves);
+    const extra=hints?` (${hints} indice${hints>1?'s':''})`:'';
+    const who=two?` Dernier coup : joueur ${2-player}.`:'';
+    render();
+    $('msg').innerHTML=`<span class="win">🎉 Réussi en ${G.moves} changement${G.moves>1?'s':''} (minimum ${G.min})${extra}.${who}</span>`;
+    return;
+  }
+  render();
+}
+$('levels').onclick=e=>{const l=e.target.dataset.l;if(l){lv=+l;start()}};
+$('tiles').onclick=e=>{const i=e.target.dataset.i;if(i!==undefined&&!G.over){sel=+i;render()}};
+$('two').onchange=e=>{two=e.target.checked;render()};
+$('new').onclick=start;
+$('undo').onclick=()=>{if(G.over||G.hist.length<2)return;G.hist.pop();G.cur=G.hist[G.hist.length-1];G.moves--;player=1-player;say('');render()};
+$('hint').onclick=()=>{
+  if(G.over)return;
+  const{dist,par}=bfs(G.t,G.len);
+  if(!(G.cur in dist))return say('Impasse : utilise « Annuler ».');
+  const nxt=[...adj(G.len)[G.cur]].filter(w=>dist[w]===dist[G.cur]-1&&!G.hist.includes(w))[0];
+  if(!nxt)return say('Impasse : utilise « Annuler ».');
+  hints++;
+  for(let i=0;i<G.len;i++)if(G.cur[i]!==nxt[i]){sel=i;say(`Indice : change la lettre ${i+1} en « ${nxt[i]} » (reste ${dist[G.cur]} étape${dist[G.cur]>1?'s':''} au minimum).`);}
+  render();
+};
+$('kb').innerHTML=ROWS.map(r=>'<div>'+[...r].map(c=>`<button data-k="${c}">${c}</button>`).join('')+'</div>').join('');
+$('kb').onclick=e=>{const k=e.target.dataset.k;if(k)play(k)};
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(/^[a-z]$/i.test(e.key))play(e.key.toUpperCase());
+  else if(/^[1-6]$/.test(e.key)&&+e.key<=G.len){sel=+e.key-1;render()}
+  else if(e.key==='ArrowRight'){sel=Math.min(G.len-1,sel+1);render()}
+  else if(e.key==='ArrowLeft'){sel=Math.max(0,sel-1);render()}
+});
+start();
+</script>
+</body>
+</html>
